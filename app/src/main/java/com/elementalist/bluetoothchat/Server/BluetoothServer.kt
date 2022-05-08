@@ -1,10 +1,13 @@
-package com.elementalist.bluetoothchat
+package com.elementalist.bluetoothchat.Server
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import com.elementalist.bluetoothchat.MY_TAG
+import com.elementalist.bluetoothchat.connectionName
+import com.elementalist.bluetoothchat.myUuid
 import java.io.IOException
 
 class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
@@ -14,14 +17,14 @@ class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
         try {
             val available = inputStream.available()
             val bytes = ByteArray(available)
-            Log.i("server", "Reading")
+            Log.i(MY_TAG, "Reading")
             inputStream.read(bytes, 0, available)
             val text = String(bytes)
-            Log.i("server", "Message received")
-            Log.i("server", text)
+            Log.i(MY_TAG, "Message received")
+            Log.i(MY_TAG, text)
 
         } catch (e: Exception) {
-            Log.i("client", "Cannot read data", e)
+            Log.i(MY_TAG, "Cannot read data", e)
         } finally {
             inputStream.close()
             socket.close()
@@ -30,7 +33,9 @@ class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
 }
 
 @SuppressLint("MissingPermission")
-class AcceptThread(bluetoothAdapter: BluetoothAdapter) : Thread() {
+class AcceptThread(
+    bluetoothAdapter: BluetoothAdapter
+) : Thread() {
 
     private val mmServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
         bluetoothAdapter.listenUsingRfcommWithServiceRecord(connectionName, myUuid)

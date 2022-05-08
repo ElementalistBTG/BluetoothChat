@@ -1,9 +1,11 @@
-package com.elementalist.bluetoothchat
+package com.elementalist.bluetoothchat.Client
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import com.elementalist.bluetoothchat.MY_TAG
+import com.elementalist.bluetoothchat.myUuid
 import java.io.IOException
 
 class BluetoothClient(private val socket:BluetoothSocket): Thread() {
@@ -34,8 +36,9 @@ class ConnectThread(device: BluetoothDevice) : Thread() {
         mmSocket?.let { socket ->
             //Connect to the remote device through the socket.
             // This call blocks until it succeeds or throws an exception
+            Log.i(MY_TAG,"attempting connection")
             socket.connect()
-
+            Log.i(MY_TAG,"connection success")
             //The connection attempt succeeded.
             //Perform work associated with the connection in a separate thread
             BluetoothClient(socket = socket)
