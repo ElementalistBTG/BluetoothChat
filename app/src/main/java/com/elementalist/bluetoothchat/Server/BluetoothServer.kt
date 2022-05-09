@@ -44,6 +44,7 @@ class AcceptThread(
     override fun run() {
         //keep listening until exception occurs or a socket is returned
         var shouldLoop = true
+        Log.i(MY_TAG,"run server")
         while (shouldLoop) {
             val socket: BluetoothSocket? = try {
                 mmServerSocket?.accept()
@@ -52,8 +53,9 @@ class AcceptThread(
                 shouldLoop = false
                 null
             }
+            Log.i(MY_TAG,"socket used")
             socket?.also {
-                BluetoothServer(it)
+                BluetoothServer(it).start()
                 mmServerSocket?.close()
                 shouldLoop = false
             }
