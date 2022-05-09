@@ -29,7 +29,6 @@ import com.elementalist.bluetoothchat.ui.theme.BluetoothChatTheme
 
 class ServerActivity : ComponentActivity() {
     //lateinit var pairedDevice: BluetoothDevice
-    lateinit var bluetoothAdapter: BluetoothAdapter
 
     val viewModel by lazy { ServerViewModel() }
 
@@ -45,7 +44,6 @@ class ServerActivity : ComponentActivity() {
                         //never gets bonded!!!!
                         Log.i(MY_TAG, "bonded")
                         viewModel.addToDisplayState("Device ${mDevice.name} bonded")
-                        serverSetUp(bluetoothAdapter)
                     } else if (mDevice?.bondState == BluetoothDevice.BOND_BONDING) {
                         viewModel.addToDisplayState("Creating bonding with device: ${mDevice.name}")
                         Log.i(MY_TAG, "bonding")
@@ -59,13 +57,13 @@ class ServerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothAdapter = bluetoothManager.adapter
+        val bluetoothAdapter = bluetoothManager.adapter
 
         val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         registerReceiver(receiver, filter)
 
         askPermissions(multiplePermissionLauncher)
-        //serverSetUp(bluetoothAdapter)
+        serverSetUp(bluetoothAdapter)
 
         setContent {
             BluetoothChatTheme {
@@ -150,9 +148,10 @@ class ServerActivity : ComponentActivity() {
     private val makeDiscoverableResultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == ComponentActivity.RESULT_OK ||
-            result.resultCode == 300
+        if (result.resultCode == ComponentActivity.RESULT_OK || //result ok is not working
+            result.resultCode == 300 //the result code is the number of seconds we defined!!!!!!!!!
         ) {
+            Log.i(MY_TAG,result.toString())
             Toast.makeText(this, "Bluetooth Enabled and visible!", Toast.LENGTH_SHORT).show()
             viewModel.addToDisplayState("Device made discoverable to other devices.")
             //serverSetUp(bluetoothAdapter)

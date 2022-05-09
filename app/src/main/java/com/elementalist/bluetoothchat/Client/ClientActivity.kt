@@ -171,7 +171,6 @@ class ClientActivity : ComponentActivity() {
     fun clientSetUp(device: BluetoothDevice) {
         viewModel.addToDisplayState("Initializing RFCOMM for data transfer")
         ConnectThread(
-            activityContext = this,
             device = device)
     }
 

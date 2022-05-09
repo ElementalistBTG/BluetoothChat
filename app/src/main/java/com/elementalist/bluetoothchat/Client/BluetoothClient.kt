@@ -14,77 +14,51 @@ import com.elementalist.bluetoothchat.myUuid
 import java.io.IOException
 
 
-@SuppressLint("MissingPermission")
-class BluetoothClient(device: BluetoothDevice): Thread() {
-    private val socket = device.createRfcommSocketToServiceRecord(myUuid)
+class BluetoothClient(private val socket:BluetoothSocket): Thread() {
 
     override fun run() {
-        Log.i("client", "Connecting")
-        this.socket.connect()
-
-        Log.i("client", "Sending")
+        Log.i(MY_TAG, "Sending")
         val outputStream = this.socket.outputStream
-        val inputStream = this.socket.inputStream
         try {
             outputStream.write("1".toByteArray())
             outputStream.flush()
-            Log.i("client", "Sent")
+            Log.i(MY_TAG, "Sent")
         } catch(e: Exception) {
-            Log.e("client", "Cannot send", e)
+            Log.i(MY_TAG, "Cannot send", e)
         } finally {
             outputStream.close()
-            inputStream.close()
             this.socket.close()
         }
     }
 }
 
+@SuppressLint("MissingPermission")
+class ConnectThread(device: BluetoothDevice) : Thread() {
+    private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
+        device.createRfcommSocketToServiceRecord(myUuid)
+    }
 
-//class BluetoothClient(private val socket:BluetoothSocket): Thread() {
-//
-//    override fun run() {
-//        Log.i(MY_TAG, "Sending")
-//        val outputStream = this.socket.outputStream
-//        try {
-//            outputStream.write("1".toByteArray())
-//            outputStream.flush()
-//            Log.i(MY_TAG, "Sent")
-//        } catch(e: Exception) {
-//            Log.i(MY_TAG, "Cannot send", e)
-//        } finally {
-//            outputStream.close()
-//            this.socket.close()
-//        }
-//    }
-//}
-//
-//@SuppressLint("MissingPermission")
-//class ConnectThread(activity : Activity, device: BluetoothDevice) : Thread() {
-//    private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-//        device.createRfcommSocketToServiceRecord(myUuid)
-//    }
-//
-//    override fun run() {
-//        Log.i(MY_TAG,"run client")
-//        mmSocket?.let { socket ->
-//            //Connect to the remote device through the socket.
-//            // This call blocks until it succeeds or throws an exception
-//            Log.i(MY_TAG,"attempting connection")
-//            socket.connect()
-//            Log.i(MY_TAG,"connection success")
-//            //The connection attempt succeeded.
-//            //Perform work associated with the connection in a separate thread
-//            BluetoothClient(socket = socket).start()
-//        }
-//
-//        //Closes the client socket and causes the thread to finish
-//        fun cancel(){
-//            try {
-//                mmSocket?.close()
-//            }catch (e:IOException){
-//                Log.i(MY_TAG,"Could not close the client socket",e)
-//            }
-//        }
-//
-//    }
-//}
+    override fun run() {
+        Log.i(MY_TAG,"run client")
+        mmSocket?.let { socket ->
+            //Connect to the remote device through the socket.
+            // This call blocks until it succeeds or throws an exception
+            Log.i(MY_TAG,"attempting connection")
+            socket.connect()
+            Log.i(MY_TAG,"connection success")
+            //The connection attempt succeeded.
+            //Perform work associated with the connection in a separate thread
+            BluetoothClient(socket = socket).start()
+        }
+
+        //Closes the client socket and causes the thread to finish
+        fun cancel(){
+            try {
+                mmSocket?.close()
+            }catch (e:IOException){
+                Log.i(MY_TAG,"Could not close the client socket",e)
+            }
+        }
+
+    }
+}

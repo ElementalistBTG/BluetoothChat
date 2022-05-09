@@ -1,10 +1,13 @@
 package com.elementalist.bluetoothchat.Server
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import com.elementalist.bluetoothchat.MY_TAG
 import com.elementalist.bluetoothchat.connectionName
 import com.elementalist.bluetoothchat.myUuid
@@ -32,11 +35,11 @@ class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
     }
 }
 
-@SuppressLint("MissingPermission")
+
 class AcceptThread(
     bluetoothAdapter: BluetoothAdapter
 ) : Thread() {
-
+        
     private val mmServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
         bluetoothAdapter.listenUsingRfcommWithServiceRecord(connectionName, myUuid)
     }
