@@ -36,6 +36,7 @@ class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
 }
 
 
+@SuppressLint("MissingPermission")
 class AcceptThread(
     bluetoothAdapter: BluetoothAdapter
 ) : Thread() {

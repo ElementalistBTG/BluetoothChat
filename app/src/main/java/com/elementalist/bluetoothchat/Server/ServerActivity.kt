@@ -171,6 +171,7 @@ class ServerActivity : ComponentActivity() {
     }
 
     private fun serverSetUp(bluetoothAdapter: BluetoothAdapter) {
+        viewModel.addToDisplayState("Server set up")
         Log.i(MY_TAG, "server set up")
         //initiate the RFCOMM server side
         AcceptThread(bluetoothAdapter = bluetoothAdapter).start()
