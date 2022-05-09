@@ -151,7 +151,7 @@ class ServerActivity : ComponentActivity() {
         if (result.resultCode == ComponentActivity.RESULT_OK || //result ok is not working
             result.resultCode == 300 //the result code is the number of seconds we defined!!!!!!!!!
         ) {
-            Log.i(MY_TAG,result.toString())
+            Log.i(MY_TAG, result.toString())
             Toast.makeText(this, "Bluetooth Enabled and visible!", Toast.LENGTH_SHORT).show()
             viewModel.addToDisplayState("Device made discoverable to other devices.")
             //serverSetUp(bluetoothAdapter)
@@ -174,7 +174,7 @@ class ServerActivity : ComponentActivity() {
         viewModel.addToDisplayState("Server set up")
         Log.i(MY_TAG, "server set up")
         //initiate the RFCOMM server side
-        AcceptThread(bluetoothAdapter = bluetoothAdapter).start()
+        AcceptThread(bluetoothAdapter, viewModel).start()
     }
 
 }

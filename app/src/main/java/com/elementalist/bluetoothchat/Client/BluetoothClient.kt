@@ -1,62 +1,66 @@
 package com.elementalist.bluetoothchat.Client
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import com.elementalist.bluetoothchat.MY_TAG
 import com.elementalist.bluetoothchat.myUuid
 import java.io.IOException
 
 
-class BluetoothClient(private val socket:BluetoothSocket): Thread() {
+class BluetoothClient(private val socket: BluetoothSocket) : Thread() {
 
     override fun run() {
         Log.i(MY_TAG, "Sending")
-        val outputStream = this.socket.outputStream
+        val outputStream = socket.outputStream
         try {
             outputStream.write("1".toByteArray())
-            outputStream.flush()
+            //outputStream.flush()
             Log.i(MY_TAG, "Sent")
-        } catch(e: Exception) {
-            Log.i(MY_TAG, "Cannot send", e)
-        } finally {
+        } catch (e: Exception) {
+            Log.i(MY_TAG, "Cannot send $e", e)
+        }
+        //maybe not needed???
+        finally {
+            Log.i(MY_TAG, "finally")
             outputStream.close()
-            this.socket.close()
+            socket.close()
         }
     }
 }
 
 @SuppressLint("MissingPermission")
-class ConnectThread(device: BluetoothDevice) : Thread() {
+class ConnectThread(
+    device: BluetoothDevice,
+    viewModel: ClientViewModel
+) : Thread() {
     private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
         device.createRfcommSocketToServiceRecord(myUuid)
     }
 
+    val myViewModel = viewModel
     override fun run() {
-        Log.i(MY_TAG,"run client")
+        myViewModel.addToDisplayState("Client run!")
         mmSocket?.let { socket ->
             //Connect to the remote device through the socket.
             // This call blocks until it succeeds or throws an exception
-            Log.i(MY_TAG,"attempting connection")
+            myViewModel.addToDisplayState("attempting connection")
+            Log.i(MY_TAG, "attempting connection")
             socket.connect()
-            Log.i(MY_TAG,"connection success")
+            myViewModel.addToDisplayState("connection success")
+            Log.i(MY_TAG, "connection success")
             //The connection attempt succeeded.
             //Perform work associated with the connection in a separate thread
-            BluetoothClient(socket = socket).start()
+            BluetoothClient(socket).start()
         }
 
         //Closes the client socket and causes the thread to finish
-        fun cancel(){
+        fun cancel() {
             try {
                 mmSocket?.close()
-            }catch (e:IOException){
-                Log.i(MY_TAG,"Could not close the client socket",e)
+            } catch (e: IOException) {
+                Log.i(MY_TAG, "Could not close the client socket", e)
             }
         }
 

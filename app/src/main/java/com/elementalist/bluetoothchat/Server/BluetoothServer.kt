@@ -38,26 +38,28 @@ class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
 
 @SuppressLint("MissingPermission")
 class AcceptThread(
-    bluetoothAdapter: BluetoothAdapter
+    bluetoothAdapter: BluetoothAdapter,
+    viewModel: ServerViewModel
 ) : Thread() {
         
     private val mmServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
         bluetoothAdapter.listenUsingRfcommWithServiceRecord(connectionName, myUuid)
     }
+    val myViewModel = viewModel
 
     override fun run() {
         //keep listening until exception occurs or a socket is returned
         var shouldLoop = true
-        Log.i(MY_TAG,"run server")
+        myViewModel.addToDisplayState("Server listening for connections")
         while (shouldLoop) {
             val socket: BluetoothSocket? = try {
                 mmServerSocket?.accept()
             } catch (e: IOException) {
-                Log.i(MY_TAG, "Socket's accept method failed")
+                myViewModel.addToDisplayState("Socket's accept method failed")
                 shouldLoop = false
                 null
             }
-            Log.i(MY_TAG,"socket used")
+            myViewModel.addToDisplayState("socket used")
             socket?.also {
                 BluetoothServer(it).start()
                 mmServerSocket?.close()
