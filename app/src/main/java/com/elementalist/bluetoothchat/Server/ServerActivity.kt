@@ -10,8 +10,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -103,14 +105,25 @@ class ServerActivity : ComponentActivity() {
         }
 
     private val multiplePermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { isGranted ->
-            Log.i(MY_TAG, "Launcher result: $isGranted");
-            if (isGranted.containsValue(false)) {
-                Log.i(MY_TAG, "At least one of the permissions was not granted.")
-                this.finish()
-            } else {
-                makeDiscoverable()
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            Log.i(MY_TAG, "Launcher result: $permissions")
+            if(permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)){
+                //permission for location was granted. we enable the location services
+                enableLocationServices()
+            }else{
+                Toast.makeText(
+                    this,
+                    "Location permission was not granted. Please do so manually",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
+//            if (permissions.containsValue(false)) {
+//                Log.i(MY_TAG, "At least one of the permissions was not granted.")
+//                this.finish()
+//            } else {
+//                makeDiscoverable()
+//            }
 
         }
 
@@ -161,6 +174,26 @@ class ServerActivity : ComponentActivity() {
         }
     }
 
+    private lateinit var locationManager: LocationManager
+    var gpsStatus = false
+
+    private fun enableLocationServices() {
+        locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        if(!gpsStatus){
+            val intent1 = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent1)
+        }
+
+        makeDiscoverable()
+    }
+
+    private val enableLocationLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultLauncher<Intent>
+    ){
+
+    }
+
     private fun makeDiscoverable() {
         val discoverableIntent: Intent =
             Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
@@ -178,55 +211,3 @@ class ServerActivity : ComponentActivity() {
     }
 
 }
-
-
-//    private fun initializeAndRequestPermissions() {
-//        val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            arrayOf(
-//                Manifest.permission.BLUETOOTH,
-//                Manifest.permission.BLUETOOTH_CONNECT,
-//                Manifest.permission.BLUETOOTH_SCAN,
-//                Manifest.permission.BLUETOOTH_ADVERTISE,
-//                Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            )
-//        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//            Log.i(MY_TAG, "permissions for my android version")
-//            arrayOf(
-//                Manifest.permission.BLUETOOTH,
-//                Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            )
-//        } else {
-//            arrayOf(
-//                Manifest.permission.BLUETOOTH,
-//                Manifest.permission.ACCESS_FINE_LOCATION,
-//                Manifest.permission.ACCESS_COARSE_LOCATION
-//            )
-//        }
-//        val missingPermissions = requiredPermissions.filter { permission ->
-//            Log.i(MY_TAG, "permission: $permission is ${checkSelfPermission(permission)}")
-//            ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
-//            //checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED
-//        }.toTypedArray()
-//        if (missingPermissions.isEmpty()) {
-//            Log.i(MY_TAG, "missingPermissions.isEmpty")
-//            makeDiscoverable()
-//        } else {
-//
-//            // requestPermissionsLauncher.launch(missingPermissions)
-////            for (permission in missingPermissions) {
-////                Log.i(MY_TAG, "missing: $permission")
-////                ActivityCompat.requestPermissions(
-////                    this,
-////                    arrayOf(permission),
-////                    BLUETOOTH_PERMISSION_REQUEST_CODE
-////                )
-////            }
-//            ActivityCompat.requestPermissions(
-//                this,
-//                missingPermissions,
-//                BLUETOOTH_PERMISSION_REQUEST_CODE
-//            )
-//        }
-//    }

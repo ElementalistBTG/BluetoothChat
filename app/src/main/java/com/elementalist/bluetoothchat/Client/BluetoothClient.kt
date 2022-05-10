@@ -15,7 +15,8 @@ class BluetoothClient(private val socket: BluetoothSocket) : Thread() {
         Log.i(MY_TAG, "Sending")
         val outputStream = socket.outputStream
         try {
-            outputStream.write("1".toByteArray())
+            outputStream.write("1".encodeToByteArray())
+            //outputStream.write("0".toByteArray())
             //outputStream.flush()
             Log.i(MY_TAG, "Sent")
         } catch (e: Exception) {
@@ -27,6 +28,7 @@ class BluetoothClient(private val socket: BluetoothSocket) : Thread() {
             outputStream.close()
             socket.close()
         }
+
     }
 }
 
