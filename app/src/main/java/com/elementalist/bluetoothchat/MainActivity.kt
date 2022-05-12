@@ -20,10 +20,6 @@ import com.elementalist.bluetoothchat.Client.ClientActivity
 import com.elementalist.bluetoothchat.Server.ServerActivity
 import com.elementalist.bluetoothchat.ui.theme.BluetoothChatTheme
 
-private const val SELECT_DEVICE_REQUEST_CODE = 0
-private const val REQUEST_BT_CONNECT = 1
-
-
 //https://towardsdatascience.com/sending-data-from-a-raspberry-pi-sensor-unit-over-serial-bluetooth-f9063f3447af
 //https://github.com/ikolomiyets/bluetooth-test/blob/master/app/src/main/java/io/iktech/demo/bttest/MainActivity.kt
 //https://github.com/android/connectivity-samples/tree/master/BluetoothChat

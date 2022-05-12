@@ -1,36 +1,48 @@
 package com.elementalist.bluetoothchat.Server
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import com.elementalist.bluetoothchat.MY_TAG
 import com.elementalist.bluetoothchat.connectionName
 import com.elementalist.bluetoothchat.myUuid
 import java.io.IOException
 
-class BluetoothServer(private val socket: BluetoothSocket) : Thread() {
-    private val inputStream = this.socket.inputStream
+class BluetoothServer(
+    private val socket: BluetoothSocket,
+    private val viewModel: ServerViewModel
+) : Thread() {
+    private val inputStream = socket.inputStream
+    private val myViewModel = viewModel
 
     override fun run() {
-        try {
-            val available = inputStream.available()
-            val bytes = ByteArray(available)
-            Log.i(MY_TAG, "Reading")
-            inputStream.read(bytes, 0, available)
-            val text = String(bytes)
-            Log.i(MY_TAG, "Message received")
-            Log.i(MY_TAG, text)
+        while (true) {
+            try {
+                // Read from the InputStream
+                val buffer = ByteArray(1)
+                inputStream.read(buffer)
+                val text = String(buffer)
+                Log.i(MY_TAG, "Message received")
+                Log.i(MY_TAG, text)
+                myViewModel.addToDisplayState("Received message: $text")
+//                val available = inputStream.available()
+//                val bytes = ByteArray(available)
+//                Log.i(MY_TAG, "Reading")
+//                inputStream.read(bytes, 0, available)
+//                val text = String(bytes)
+//                Log.i(MY_TAG, "Message received")
+//                Log.i(MY_TAG, text)
 
-        } catch (e: Exception) {
-            Log.i(MY_TAG, "Cannot read data", e)
-        } finally {
-            inputStream.close()
-            socket.close()
+            } catch (e: IOException) {
+                Log.i(MY_TAG, "Input stream was disconnected", e)
+                break
+            } finally {
+                inputStream.close()
+                socket.close()
+            }
+            // Send the obtained bytes to the UI activity.
         }
     }
 }
@@ -41,11 +53,11 @@ class AcceptThread(
     bluetoothAdapter: BluetoothAdapter,
     viewModel: ServerViewModel
 ) : Thread() {
-        
+
     private val mmServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
         bluetoothAdapter.listenUsingRfcommWithServiceRecord(connectionName, myUuid)
     }
-    val myViewModel = viewModel
+    private val myViewModel = viewModel
 
     override fun run() {
         //keep listening until exception occurs or a socket is returned
@@ -59,9 +71,8 @@ class AcceptThread(
                 shouldLoop = false
                 null
             }
-            myViewModel.addToDisplayState("socket used")
             socket?.also {
-                BluetoothServer(it).start()
+                BluetoothServer(it, myViewModel).start()
                 mmServerSocket?.close()
                 shouldLoop = false
             }

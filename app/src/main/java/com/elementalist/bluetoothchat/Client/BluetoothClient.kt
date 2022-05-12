@@ -15,43 +15,43 @@ class BluetoothClient(private val socket: BluetoothSocket) : Thread() {
         Log.i(MY_TAG, "Sending")
         val outputStream = socket.outputStream
         try {
-            outputStream.write("1".encodeToByteArray())
-            //outputStream.write("0".toByteArray())
+            //outputStream.write("1".encodeToByteArray())
+            val message = "1".toByteArray()
+            outputStream.write(message)
             //outputStream.flush()
-            Log.i(MY_TAG, "Sent")
+            Log.i(MY_TAG, "Sent: $message")
         } catch (e: Exception) {
             Log.i(MY_TAG, "Cannot send $e", e)
         }
         //maybe not needed???
-        finally {
-            Log.i(MY_TAG, "finally")
-            outputStream.close()
-            socket.close()
-        }
+//        finally {
+//            Log.i(MY_TAG, "finally")
+//            outputStream.close()
+//            socket.close()
+//        }
 
     }
 }
 
 @SuppressLint("MissingPermission")
 class ConnectThread(
-    device: BluetoothDevice,
-    viewModel: ClientViewModel
+    device: BluetoothDevice
 ) : Thread() {
     private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
         device.createRfcommSocketToServiceRecord(myUuid)
     }
 
-    val myViewModel = viewModel
     override fun run() {
-        myViewModel.addToDisplayState("Client run!")
         mmSocket?.let { socket ->
             //Connect to the remote device through the socket.
             // This call blocks until it succeeds or throws an exception
-            myViewModel.addToDisplayState("attempting connection")
-            Log.i(MY_TAG, "attempting connection")
-            socket.connect()
-            myViewModel.addToDisplayState("connection success")
-            Log.i(MY_TAG, "connection success")
+            try {
+                Log.i(MY_TAG, "attempting connection")
+                socket.connect()
+                Log.i(MY_TAG, "connection success")
+            } catch (e: Exception) {
+                Log.i(MY_TAG, "connection was not successful")
+            }
             //The connection attempt succeeded.
             //Perform work associated with the connection in a separate thread
             BluetoothClient(socket).start()

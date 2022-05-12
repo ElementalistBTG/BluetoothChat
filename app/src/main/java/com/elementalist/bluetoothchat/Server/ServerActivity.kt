@@ -1,15 +1,10 @@
 package com.elementalist.bluetoothchat.Server
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -18,53 +13,60 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import androidx.core.app.ActivityCompat
 import com.elementalist.bluetoothchat.MY_TAG
+import com.elementalist.bluetoothchat.askPermissions
+import com.elementalist.bluetoothchat.askSinglePermission
+import com.elementalist.bluetoothchat.requiredPermissionsInitialServer
 import com.elementalist.bluetoothchat.ui.theme.BluetoothChatTheme
 
 
 class ServerActivity : ComponentActivity() {
-    //lateinit var pairedDevice: BluetoothDevice
 
-    val viewModel by lazy { ServerViewModel() }
+    private val viewModel by lazy { ServerViewModel() }
 
-    //if the pairing is made from the other phone then we need to listen for pairing success
-    private val receiver = object : BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                    val mDevice: BluetoothDevice? =
-                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    if (mDevice?.bondState == BluetoothDevice.BOND_BONDED) {
-                        //never gets bonded!!!!
-                        Log.i(MY_TAG, "bonded")
-                        viewModel.addToDisplayState("Device ${mDevice.name} bonded")
-                    } else if (mDevice?.bondState == BluetoothDevice.BOND_BONDING) {
-                        viewModel.addToDisplayState("Creating bonding with device: ${mDevice.name}")
-                        Log.i(MY_TAG, "bonding")
-                        //pairedDevice = mDevice
-                    }
-                }
-            }
-        }
-    }
+//    //if the pairing is made from the other phone then we need to listen for pairing success
+//    private val receiver = object : BroadcastReceiver() {
+//        @SuppressLint("MissingPermission")
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            when (intent?.action) {
+//                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
+//                    val mDevice: BluetoothDevice? =
+//                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+//                    if (mDevice?.bondState == BluetoothDevice.BOND_BONDED) {
+//                        //never gets bonded!!!!
+//                        Log.i(MY_TAG, "bonded")
+//                        viewModel.addToDisplayState("Device ${mDevice.name} bonded")
+//                    } else if (mDevice?.bondState == BluetoothDevice.BOND_BONDING) {
+//                        viewModel.addToDisplayState("Creating bonding with device: ${mDevice.name}")
+//                        Log.i(MY_TAG, "bonding")
+//                        //pairedDevice = mDevice
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
 
-        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-        registerReceiver(receiver, filter)
+//        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
+//        registerReceiver(receiver, filter)
 
-        askPermissions(multiplePermissionLauncher)
+        askPermissions(multiplePermissionLauncher, requiredPermissionsInitialServer, this) {
+            makeDiscoverable()
+        }
+
+        if (!isLocationEnabled(this) && Build.VERSION.SDK_INT <= 30) {
+            enableLocation()
+        }
+
         serverSetUp(bluetoothAdapter)
 
         setContent {
@@ -81,81 +83,65 @@ class ServerActivity : ComponentActivity() {
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(receiver)
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        unregisterReceiver(receiver)
+//    }
 
-    private val requiredPermissions =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_ADVERTISE,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        } else {
-            arrayOf(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        }
 
     private val multiplePermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            Log.i(MY_TAG, "Launcher result: $permissions")
-            if(permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)){
-                //permission for location was granted. we enable the location services
-                enableLocationServices()
-            }else{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                Log.i(MY_TAG, "Launcher result: $permissions")
+                if (permissions.containsValue(false)) {
+                    Log.i(MY_TAG, "At least one of the permissions was not granted.")
+                    this.finish()
+                } else {
+                    makeDiscoverable()
+                }
+            }
+        } else {
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                Log.i(MY_TAG, "Launcher result: $permissions")
+                if (permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)) {
+                    //permission for location was granted.
+                    //we direct the user to select "Allow all the time option
+                    allowLocationAllTheTime()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Location permission was not granted. Please do so manually",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    this.finish()
+                }
+            }
+        }
+
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission Accepted: Do something
+                makeDiscoverable()
+            } else {
+                // Permission Denied: Do something
+                Log.i(MY_TAG, "Permission Denied")
                 Toast.makeText(
                     this,
-                    "Location permission was not granted. Please do so manually",
-                    Toast.LENGTH_SHORT
+                    "You should really select the option 'Allow all the time' for location in order for this app to work!",
+                    Toast.LENGTH_LONG
                 ).show()
             }
-
-//            if (permissions.containsValue(false)) {
-//                Log.i(MY_TAG, "At least one of the permissions was not granted.")
-//                this.finish()
-//            } else {
-//                makeDiscoverable()
-//            }
-
         }
 
-    private fun askPermissions(multiplePermissionLauncher: ActivityResultLauncher<Array<String>>) {
-        if (!hasPermissions(requiredPermissions)) {
-            Log.i(
-                MY_TAG,
-                "Launching multiple contract permission launcher for ALL required permissions"
-            )
-            multiplePermissionLauncher.launch(requiredPermissions)
-        } else {
-            Log.i(MY_TAG, "All permissions are already granted")
+    private fun allowLocationAllTheTime() {
+        askSinglePermission(
+            locationPermissionLauncher,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            this
+        ) {
             makeDiscoverable()
         }
-    }
-
-    private fun hasPermissions(permissions: Array<String>?): Boolean {
-        if (permissions != null) {
-            for (permission in permissions) {
-                if (ActivityCompat.checkSelfPermission(
-                        this,
-                        permission
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    //Permission is not granted
-                    return false
-                }
-                //Permission already granted
-            }
-            return true
-        }
-        return false
     }
 
     private val makeDiscoverableResultLauncher = registerForActivityResult(
@@ -174,26 +160,6 @@ class ServerActivity : ComponentActivity() {
         }
     }
 
-    private lateinit var locationManager: LocationManager
-    var gpsStatus = false
-
-    private fun enableLocationServices() {
-        locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if(!gpsStatus){
-            val intent1 = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(intent1)
-        }
-
-        makeDiscoverable()
-    }
-
-    private val enableLocationLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
-        ActivityResultLauncher<Intent>
-    ){
-
-    }
-
     private fun makeDiscoverable() {
         val discoverableIntent: Intent =
             Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
@@ -201,6 +167,22 @@ class ServerActivity : ComponentActivity() {
             }
         Log.i(MY_TAG, "enableBluetoothAndMakeDiscoverable")
         makeDiscoverableResultLauncher.launch(discoverableIntent)
+    }
+
+    private fun isLocationEnabled(context: Context): Boolean {
+        val locationManager =
+            context.getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isLocationEnabled
+    }
+
+    private fun enableLocation() {
+        Toast.makeText(
+            this,
+            "Location should be enabled for MY XIAOMI PHONE!?!?!?",
+            Toast.LENGTH_SHORT
+        ).show()
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        startActivity(intent)
     }
 
     private fun serverSetUp(bluetoothAdapter: BluetoothAdapter) {

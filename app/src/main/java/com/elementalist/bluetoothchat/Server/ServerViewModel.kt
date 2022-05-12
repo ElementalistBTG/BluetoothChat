@@ -19,6 +19,6 @@ class ServerViewModel : ViewModel() {
     }
 
     init {
-        addToDisplayState("Server set up")
+        addToDisplayState("Server Mode")
     }
 }
