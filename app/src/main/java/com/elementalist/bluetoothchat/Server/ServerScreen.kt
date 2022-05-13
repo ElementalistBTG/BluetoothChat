@@ -18,14 +18,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ServerScreen(viewModel: ServerViewModel = ServerViewModel()) {
-
-//    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-//        items(displayState) { text ->
-//            Text(text = text)
-//            Divider(Modifier.padding(3.dp), color = Color.Green)
-//        }
-//    }
-
+    //we observe some viewModel's variables to dynamically change the screen
     val buttonAction = viewModel.buttonAction
     val buttonText = viewModel.buttonText
     val displayedText = viewModel.displayedText
@@ -43,14 +36,13 @@ fun ServerScreen(viewModel: ServerViewModel = ServerViewModel()) {
                 .fillMaxWidth()
                 .weight(1f, true)
         ) {
+            //hide button if it is not needed
             if (buttonText != "") {
                 Button(modifier = Modifier.align(Alignment.Center), onClick = { buttonAction() }) {
                     Text(text = buttonText)
                 }
             }
         }
-        //Spacer(modifier = Modifier.padding(2.dp))
-        //description Text
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -64,6 +56,7 @@ fun ServerScreen(viewModel: ServerViewModel = ServerViewModel()) {
                 .fillMaxWidth()
                 .weight(6f, true)
         ) {
+            //We hide the image-result when it is not needed
             if (imageShown != 0) {
                 Image(
                     painter = painterResource(imageShown),

@@ -42,6 +42,7 @@ class ConnectThread(
     }
 
     override fun run() {
+
         mmSocket?.let { socket ->
             //Connect to the remote device through the socket.
             // This call blocks until it succeeds or throws an exception

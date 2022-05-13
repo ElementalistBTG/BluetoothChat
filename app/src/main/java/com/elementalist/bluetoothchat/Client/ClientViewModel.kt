@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModel
 import com.elementalist.bluetoothchat.MY_TAG
 
 class ClientViewModel(
-    val bluetoothAdapter: BluetoothAdapter
+    private val bluetoothAdapter: BluetoothAdapter
 ) : ViewModel() {
 
     var discoveredDevices = mutableStateListOf<BluetoothDevice>()
@@ -53,15 +53,18 @@ class ClientViewModel(
         selectedDevice = device
     }
 
+    /**
+     * Connect to the selected device and send data
+     *
+     */
+    @SuppressLint("MissingPermission")
     fun sendDataToDevice() {
-        selectedDevice?.let { clientSetUp(it) }
+        // Cancel discovery because it otherwise slows down the connection.
+        bluetoothAdapter.cancelDiscovery()
+        //Send data to selected device
+        selectedDevice?.let {
+            ConnectThread(it).start()
+        }
     }
-
-    private fun clientSetUp(device: BluetoothDevice) {
-        ConnectThread(
-            device
-        ).start()
-    }
-
 
 }

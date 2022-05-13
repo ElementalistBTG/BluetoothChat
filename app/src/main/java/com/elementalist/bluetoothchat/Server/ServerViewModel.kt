@@ -27,6 +27,7 @@ class ServerViewModel : ViewModel() {
     var image by mutableStateOf<Int>(0)
         private set
 
+    //Function to externally modify state for ServerScreen
     fun changeStateOfServer(
         newState: StatesOfServer,
         dataReceived: String? = null
@@ -41,6 +42,7 @@ class ServerViewModel : ViewModel() {
                 displayedText = "Server is listening for connections..."
                 buttonText = "Restart Server?"
                 buttonAction = { startServer() }
+                image = 0
             }
             StatesOfServer.RESPONSE_RECEIVED -> {
                 when {
@@ -64,7 +66,7 @@ class ServerViewModel : ViewModel() {
             }
             StatesOfServer.ERROR -> {
                 buttonText = ""
-                displayedText = "An error occured: $dataReceived"
+                displayedText = "An error occurred: $dataReceived"
             }
         }
     }
@@ -75,14 +77,6 @@ class ServerViewModel : ViewModel() {
         changeStateOfServer(StatesOfServer.SERVER_STARTED)
     }
 
-
-//    var state = mutableStateOf<ServerState>(ServerState.InitiatedServer)
-//        private set
-//
-//    private fun setState(newState: ServerState) {
-//        state.value = newState
-//    }
-
 }
 
 enum class StatesOfServer {
@@ -92,27 +86,4 @@ enum class StatesOfServer {
     RESPONSE_RECEIVED
 }
 
-//sealed class ServerState(
-//    val buttonText: String = "",
-//    val displayText: String = "",
-//    val buttonAction: () -> Unit
-//) {
-//    object InitiatedServer : ServerState(
-//        buttonText = "Set up Server",
-//        buttonAction = { setUpServer() }
-//    )
-//
-//    object ServerSettedUp : ServerState(
-//        displayText = "Server is discoverable and awaits data",
-//        buttonAction = { }
-//    )
-//
-//    object SocketClosed : ServerState(
-//        buttonText = "Re-start server",
-//        buttonAction = { setUpServer() },
-//        displayText = "Connection closed. Restart server to listen to data again"
-//    )
-//
-//    object ResultReceived :
-//}
 

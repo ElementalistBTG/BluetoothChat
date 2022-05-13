@@ -18,10 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import com.elementalist.bluetoothchat.MY_TAG
-import com.elementalist.bluetoothchat.askPermissions
-import com.elementalist.bluetoothchat.askSinglePermission
-import com.elementalist.bluetoothchat.requiredPermissionsInitialServer
+import com.elementalist.bluetoothchat.*
 import com.elementalist.bluetoothchat.ui.theme.BluetoothChatTheme
 
 
@@ -29,51 +26,28 @@ class ServerActivity : ComponentActivity() {
 
     private val viewModel by lazy { ServerViewModel() }
 
-//    //if the pairing is made from the other phone then we need to listen for pairing success
-//    private val receiver = object : BroadcastReceiver() {
-//        @SuppressLint("MissingPermission")
-//        override fun onReceive(context: Context?, intent: Intent?) {
-//            when (intent?.action) {
-//                BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-//                    val mDevice: BluetoothDevice? =
-//                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//                    if (mDevice?.bondState == BluetoothDevice.BOND_BONDED) {
-//                        //never gets bonded!!!!
-//                        Log.i(MY_TAG, "bonded")
-//                        viewModel.addToDisplayState("Device ${mDevice.name} bonded")
-//                    } else if (mDevice?.bondState == BluetoothDevice.BOND_BONDING) {
-//                        viewModel.addToDisplayState("Creating bonding with device: ${mDevice.name}")
-//                        Log.i(MY_TAG, "bonding")
-//                        //pairedDevice = mDevice
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
 
-//        val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-//        registerReceiver(receiver, filter)
-
+        //We ask permissions and after being granted these permissions we make the device discoverable.
         askPermissions(multiplePermissionLauncher, requiredPermissionsInitialServer, this) {
             makeDiscoverable()
         }
-
+        //After thorough experimentation i concluded that for 2 different Xiaomi phones used for testing
+        //we need gps services to be enabled for bluetooth
+        //to work as intended so we ask the user to enable GPS also
         if (!isLocationEnabled(this) && Build.VERSION.SDK_INT <= 30) {
-            enableLocation()
+            enableLocation(this)
         }
 
         viewModel.bluetoothAdapter = bluetoothAdapter
-
+        //We set the initial displayed items on screen
         viewModel.changeStateOfServer(StatesOfServer.APP_STARTED)
 
         setContent {
             BluetoothChatTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
@@ -85,20 +59,19 @@ class ServerActivity : ComponentActivity() {
 
     }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        unregisterReceiver(receiver)
-//    }
-
-
     private val multiplePermissionLauncher =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-                Log.i(MY_TAG, "Launcher result: $permissions")
                 if (permissions.containsValue(false)) {
-                    Log.i(MY_TAG, "At least one of the permissions was not granted.")
+                    //At least one of the permissions was not granted.
+                    Toast.makeText(
+                        applicationContext,
+                        "At least one permission was denied. Please allow all permissions manually and relaunch this app",
+                        Toast.LENGTH_LONG
+                    ).show()
                     this.finish()
                 } else {
+                    //All permissions are granted
                     makeDiscoverable()
                 }
             }
@@ -107,7 +80,7 @@ class ServerActivity : ComponentActivity() {
                 Log.i(MY_TAG, "Launcher result: $permissions")
                 if (permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)) {
                     //permission for location was granted.
-                    //we direct the user to select "Allow all the time option
+                    //we direct the user to select "Allow all the time option" for devices with SDK 29 or 30
                     allowLocationAllTheTime()
                 } else {
                     Toast.makeText(
@@ -150,41 +123,29 @@ class ServerActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK || //result ok is not working
-            result.resultCode == 300 //the result code is the number of seconds we defined!!!!!!!!!
+            result.resultCode == 300 //the result code is the number of seconds we defined!!!!!!!!! (bug probably on specific devices)
         ) {
-            Log.i(MY_TAG, result.toString())
-            Toast.makeText(this, "Bluetooth Enabled and visible!", Toast.LENGTH_SHORT).show()
-            //viewModel.setInfoState("Device made discoverable to other devices.")
-            //serverSetUp(bluetoothAdapter)
+            Toast.makeText(
+                this,
+                "Bluetooth Enabled and device made discoverable!",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
             Toast.makeText(this, "Bluetooth is required for this app to run", Toast.LENGTH_SHORT)
                 .show()
         }
     }
 
+    /**
+     * Pop-up activation for enable bluetooth and make device discoverable
+     *
+     */
     private fun makeDiscoverable() {
         val discoverableIntent: Intent =
             Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
                 putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
             }
-        Log.i(MY_TAG, "enableBluetoothAndMakeDiscoverable")
         makeDiscoverableResultLauncher.launch(discoverableIntent)
-    }
-
-    private fun isLocationEnabled(context: Context): Boolean {
-        val locationManager =
-            context.getSystemService(LOCATION_SERVICE) as LocationManager
-        return locationManager.isLocationEnabled
-    }
-
-    private fun enableLocation() {
-        Toast.makeText(
-            this,
-            "Location should be enabled for XIAOMI PHONE!?!?!?",
-            Toast.LENGTH_SHORT
-        ).show()
-        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        startActivity(intent)
     }
 
 

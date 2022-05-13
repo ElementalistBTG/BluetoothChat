@@ -4,10 +4,12 @@ import android.Manifest
 import android.os.Build
 import java.util.*
 
-val connectionName = "con"
-val myUuid = UUID.fromString("8989063a-c9af-463a-b3f1-f21d9b2b827b")
-val MY_TAG = "mytag"
-
+//For a RFComm connection to exist both devices must use a name and a uuid to communicate. We hardcode these into our app
+const val connectionName = "con"
+val myUuid: UUID = UUID.fromString("12345678-abcd-abcd-abcd-1234567890ab")
+//tag used for logging purposes
+const val MY_TAG = "mytag"
+//Since the permissions needed for this app are fixed we define them here
 val requiredPermissionsInitialClient =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         arrayOf(
