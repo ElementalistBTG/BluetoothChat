@@ -29,7 +29,8 @@ fun ServerScreen(viewModel: ServerViewModel = ServerViewModel()) {
             .fillMaxSize()
             .padding(5.dp)
             .border(5.dp, MaterialTheme.colors.secondary)
-            .padding(5.dp)
+            .padding(5.dp),
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         Box(
             modifier = Modifier
@@ -61,7 +62,7 @@ fun ServerScreen(viewModel: ServerViewModel = ServerViewModel()) {
                 Image(
                     painter = painterResource(imageShown),
                     contentDescription = "Result from sniffing",
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.FillWidth
                 )
             }
 

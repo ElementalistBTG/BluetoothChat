@@ -24,7 +24,7 @@ class ServerViewModel : ViewModel() {
 
     var buttonAction by mutableStateOf({})
 
-    var image by mutableStateOf<Int>(0)
+    var image by mutableStateOf(0)
         private set
 
     //Function to externally modify state for ServerScreen
@@ -67,6 +67,7 @@ class ServerViewModel : ViewModel() {
             StatesOfServer.ERROR -> {
                 buttonText = ""
                 displayedText = "An error occurred: $dataReceived"
+                image = 0
             }
         }
     }

@@ -16,7 +16,7 @@ class BluetoothClient(private val socket: BluetoothSocket) : Thread() {
         val outputStream = socket.outputStream
         try {
             //outputStream.write("1".encodeToByteArray())
-            val message = "1".toByteArray()
+            val message = "0".toByteArray()
             outputStream.write(message)
             //outputStream.flush()
             Log.i(MY_TAG, "Sent: $message")

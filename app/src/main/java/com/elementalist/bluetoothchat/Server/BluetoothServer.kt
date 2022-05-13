@@ -38,10 +38,6 @@ class BluetoothServer(
                 )
             } catch (e: IOException) {
                 Log.i(MY_TAG, "Input stream was disconnected", e)
-                viewModel.changeStateOfServer(
-                    newState = StatesOfServer.ERROR,
-                    dataReceived = e.localizedMessage
-                )
                 break
             } finally {
                 inputStream.close()
