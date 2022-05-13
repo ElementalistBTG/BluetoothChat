@@ -99,7 +99,7 @@ fun ClientScreen(viewModel: ClientViewModel) {
     val discoveredDevices = viewModel.discoveredDevices
     val selectedDevice = viewModel.selectedDevice
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(10.dp)) {
         Button(onClick = {
             //check for permissions
             askPermissions(

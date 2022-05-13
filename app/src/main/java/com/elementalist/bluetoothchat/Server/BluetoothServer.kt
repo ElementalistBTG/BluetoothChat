@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.elementalist.bluetoothchat.MY_TAG
 import com.elementalist.bluetoothchat.connectionName
 import com.elementalist.bluetoothchat.myUuid
@@ -15,8 +16,7 @@ class BluetoothServer(
     private val viewModel: ServerViewModel
 ) : Thread() {
     private val inputStream = socket.inputStream
-    private val myViewModel = viewModel
-
+    
     override fun run() {
         while (true) {
             try {
@@ -26,7 +26,13 @@ class BluetoothServer(
                 val text = String(buffer)
                 Log.i(MY_TAG, "Message received")
                 Log.i(MY_TAG, text)
-                myViewModel.addToDisplayState("Received message: $text")
+                // Send the obtained bytes to the UI activity.
+                viewModel.changeStateOfServer(
+                    newState = StatesOfServer.RESPONSE_RECEIVED,
+                    dataReceived = text
+                )
+
+                //myViewModel.setInfoState("Received message: $text")
 //                val available = inputStream.available()
 //                val bytes = ByteArray(available)
 //                Log.i(MY_TAG, "Reading")
@@ -37,12 +43,16 @@ class BluetoothServer(
 
             } catch (e: IOException) {
                 Log.i(MY_TAG, "Input stream was disconnected", e)
+                viewModel.changeStateOfServer(
+                    newState = StatesOfServer.ERROR,
+                    dataReceived = e.localizedMessage
+                )
                 break
             } finally {
                 inputStream.close()
                 socket.close()
             }
-            // Send the obtained bytes to the UI activity.
+
         }
     }
 }
@@ -62,12 +72,12 @@ class AcceptThread(
     override fun run() {
         //keep listening until exception occurs or a socket is returned
         var shouldLoop = true
-        myViewModel.addToDisplayState("Server listening for connections")
+        //myViewModel.setInfoState("Server listening for connections")
         while (shouldLoop) {
             val socket: BluetoothSocket? = try {
                 mmServerSocket?.accept()
             } catch (e: IOException) {
-                myViewModel.addToDisplayState("Socket's accept method failed")
+                //myViewModel.setInfoState("Socket's accept method failed")
                 shouldLoop = false
                 null
             }

@@ -67,7 +67,9 @@ class ServerActivity : ComponentActivity() {
             enableLocation()
         }
 
-        serverSetUp(bluetoothAdapter)
+        viewModel.bluetoothAdapter = bluetoothAdapter
+
+        viewModel.changeStateOfServer(StatesOfServer.APP_STARTED)
 
         setContent {
             BluetoothChatTheme {
@@ -147,12 +149,12 @@ class ServerActivity : ComponentActivity() {
     private val makeDiscoverableResultLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == ComponentActivity.RESULT_OK || //result ok is not working
+        if (result.resultCode == RESULT_OK || //result ok is not working
             result.resultCode == 300 //the result code is the number of seconds we defined!!!!!!!!!
         ) {
             Log.i(MY_TAG, result.toString())
             Toast.makeText(this, "Bluetooth Enabled and visible!", Toast.LENGTH_SHORT).show()
-            viewModel.addToDisplayState("Device made discoverable to other devices.")
+            //viewModel.setInfoState("Device made discoverable to other devices.")
             //serverSetUp(bluetoothAdapter)
         } else {
             Toast.makeText(this, "Bluetooth is required for this app to run", Toast.LENGTH_SHORT)
@@ -178,18 +180,12 @@ class ServerActivity : ComponentActivity() {
     private fun enableLocation() {
         Toast.makeText(
             this,
-            "Location should be enabled for MY XIAOMI PHONE!?!?!?",
+            "Location should be enabled for XIAOMI PHONE!?!?!?",
             Toast.LENGTH_SHORT
         ).show()
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
         startActivity(intent)
     }
 
-    private fun serverSetUp(bluetoothAdapter: BluetoothAdapter) {
-        viewModel.addToDisplayState("Server set up")
-        Log.i(MY_TAG, "server set up")
-        //initiate the RFCOMM server side
-        AcceptThread(bluetoothAdapter, viewModel).start()
-    }
 
 }
