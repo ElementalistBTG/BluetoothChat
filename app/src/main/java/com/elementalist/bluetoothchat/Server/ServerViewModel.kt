@@ -3,14 +3,13 @@ package com.elementalist.bluetoothchat.Server
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Log
-import com.elementalist.bluetoothchat.R.drawable.nok
-import com.elementalist.bluetoothchat.R.drawable.ok
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.elementalist.bluetoothchat.MY_TAG
-import com.elementalist.bluetoothchat.R
+import com.elementalist.bluetoothchat.R.drawable.nok
+import com.elementalist.bluetoothchat.R.drawable.ok
 
 class ServerViewModel : ViewModel() {
 
